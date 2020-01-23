@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title></title>
+<style>
+/* CSS Document */
+body {
+    font:12px arial;
+    color: #222;
+    text-align:center;
+    padding:35px; }
+  
+form, p, span {
+    margin:0;
+    padding:0; }
+  
+input { font:12px arial; }
+  
+a {
+    color:#0000FF;
+    text-decoration:none; }
+a:hover { text-decoration:underline; }
+  
+#wrapper {
+    margin:0 auto;
+    padding-bottom:25px;
+    background:#EBF4FB;
+    width:704px;
+    border:1px solid #ACD8F0; }
+  
+#chatbox {
+    text-align:left;
+    margin:0 auto;
+    margin-bottom:25px;
+    padding:10px;
+    background:#fff;
+    height:370px;
+    width:630px;
+    border:1px solid #ACD8F0;
+    overflow:auto; }
+  
+#usermsg {
+    width:595px;
+    border:1px solid #ACD8F0; }
+
+#submit { width: 60px; }
+  
+#menu { padding:12.5px 25px 12.5px 25px; }
+      
+.msgln { margin:0 0 2px 0; }
+.msg-text { margin-top: 5px ;}
+.username {
+    color: #222; }
+.username-your {
+    color:brown; }
+</style>
+</head>
+ 
+<div id="wrapper">
+    <div id="menu">
+        <div style="clear:both"></div>
+    </div>
+     
+    <div id="chatbox">
+    </div>
+     
+    <form name="message" action="">
+        <input name="message" type="text" id="usermsg" size="63" autocomplete="off" maxlength="100" />
+        <input name="submitmsg" type="submit"  id="submitmsg" value="Send" />
+    </form>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+var username = ''
+
+$(document).ready(function(){
+    username = randomUsername()
+    let source = new EventSource("/stream/");
+    source.onmessage = function(event) {
+        let response = JSON.parse(event.data);
+        console.log(response)
+        if(response.username == username) 
+        var style_user = response.username == username ? 'username-your' : 'username'
+        let timestamp = timestmp()
+        $('#chatbox').append(`<p class='msg-text'><strong class="${style_user}">[${timestamp}] ${response.username} :</strong> ` + response.message + "</p>")
+
+    };
+
+    $('form').submit((e) => {
+        e.preventDefault()
+        var data = $(this).serialize()
+        var msg = $(this).find('input[name=message]').val()
+        $.post('/send/', {
+            username: username,
+            message: msg
+        }, (data) => {
+            $('form')[0].reset();
+            console.log(data)
+        })
+    })
+
+});
+const randomUsername = () => {
+    return "User" + Math.floor(Math.random() * 501)
+}
+const timestmp = () => {
+    var dateWithouthSecond = new Date();
+    return dateWithouthSecond.toLocaleTimeString(navigator.language, {hour: '2-digit', minute:'2-digit'})
+}
+</script>
+</body>
+</html>
